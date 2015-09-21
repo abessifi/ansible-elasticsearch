@@ -1,17 +1,12 @@
 ---
-# Elasticsearch Ansible Variables
 
 elasticsearch_user: elasticsearch
 elasticsearch_group: elasticsearch
 elasticsearch_download_url: https://download.elasticsearch.org/elasticsearch/elasticsearch
-elasticsearch_version: 1.4.2
-elasticsearch_apt_repos:
-  - 'ppa:webupd8team/java'
-elasticsearch_apt_java_package: oracle-java7-installer
+elasticsearch_version: 1.5.2
 elasticsearch_apt_dependencies:
-  - htop
-  - ntp
   - unzip
+  - git
 elasticsearch_max_open_files: 65535
 elasticsearch_home_dir: /usr/share/elasticsearch
 elasticsearch_plugin_dir: /usr/share/elasticsearch/plugins
@@ -19,10 +14,26 @@ elasticsearch_log_dir: /var/log/elasticsearch
 elasticsearch_data_dir: /var/lib/elasticsearch
 elasticsearch_work_dir: /tmp/elasticsearch
 elasticsearch_conf_dir: /etc/elasticsearch
-elasticsearch_service_startonboot: no
-#elasticsearch_http_cors_enabled: "false"
+elasticsearch_service_startonboot: yes
 elasticsearch_service_state: started
 
-# Non-Elasticsearch Defaults
-apt_cache_valid_time: 300 # seconds between "apt-get update" calls.
-elasticsearch_install_java: "true"
+# Elasticsearch config params
+elasticsearch_network_http_port: 9200
+elasticsearch_cluster_name: "elasticsearch"
+elasticsearch_heap_size: 512m
+elasticsearch_node_max_local_storage_nodes: 1
+elasticsearch_memory_bootstrap_mlockall: "true"
+
+# Elasticsearch default plugins
+elasticsearch_plugins:
+  - { name: 'mobz/elasticsearch-head' }
+  - { name: 'elasticsearch/elasticsearch-analysis-icu/2.7.0' }
+
+# Elasticsearch Search Guard Plugin
+elasticsearch_install_searchguard: true
+# if elasticsearch_install_searchguard is true, this will build and install search-guard for specific version of Elasticsearch.
+# the search-guard plugin should not be specified within "elasticsearch_plugins" list as it will has a custom installation.
+elasticsearch_searchguard_url: "https://github.com/floragunncom/search-guard"
+elasticsearch_searchguard_default_plugin: "com.floragunn/search-guard/0.5"
+elasticsearch_searchguard_build_dir: "/usr/local/src"
+elasticsearch_searchguard_keypath: "/home/elasticsearch"

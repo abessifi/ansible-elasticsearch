@@ -1,0 +1,35 @@
+---
+
+# Remove search-guard plugin if exists already
+- name: remove search-guard plugin
+  shell: "{{ elasticsearch_home_dir }}/bin/plugin --remove search-guard"
+  ignore_errors: yes
+
+- name: Elasticsearch version not supported
+  debug: msg="Search Guard plugin didn't support ES {{ elasticsearch_version }}"
+  when: "{{ elasticsearch_version | version_compare('1.7', '>=') }}"
+
+- name: install search-guard for ES (versions <= 5.x)
+  shell: "{{ elasticsearch_home_dir }}/bin/plugin --install {{ elasticsearch_searchguard_default_plugin }}"
+  when: "{{ elasticsearch_version | version_compare('1.6', '<') }}"
+
+# Download and build search-guard plugin for ES 1.6
+- name: retreive search-guard from git
+  git: repo={{ elasticsearch_searchguard_url }}
+       dest="{{ elasticsearch_searchguard_build_dir }}/search-guard"
+       version="es1.6" update=yes depth=1
+  when: "{{ elasticsearch_version | version_compare('1.6', '>=') }} and {{ elasticsearch_version | version_compare('1.7', '<') }}"
+
+- name: build search-guard plugin
+  shell: "mvn package -DskipTests"
+  args:
+    chdir: "{{ elasticsearch_searchguard_build_dir }}/search-guard"
+  when: "{{ elasticsearch_version | version_compare('1.6', '>=') }} and {{ elasticsearch_version | version_compare('1.7', '<') }}"
+
+- name: install search-guard plugin
+  shell: "{{ elasticsearch_home_dir }}/bin/plugin --install search-guard --url file://{{ elasticsearch_searchguard_build_dir }}/search-guard/target/releases/search-guard-16-0.6-SNAPSHOT.zip"
+  when: "{{ elasticsearch_version | version_compare('1.6', '>=') }} and {{ elasticsearch_version | version_compare('1.7', '<') }}"
+
+- name: create search-guard key directory
+  file: path={{ elasticsearch_searchguard_keypath }} state=directory
+        owner={{ elasticsearch_user }} group={{ elasticsearch_group }}
